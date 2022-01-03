@@ -1,13 +1,15 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import FileBase from "react-file-base64";
 import { TextField, Button, Typography, Paper } from "@material-ui/core";
 import useStyles from "./styles.js";
-import { useDispatch } from 'react-redux';
-import { createPost } from "../../actions/postsActions";
+import { useDispatch, useSelector } from "react-redux";
+import { createPost, updatePost } from "../../actions/postsActions";
 
-const Form = () => {
+//get current id of the post
+
+const Form = ({ currentID, setCurrentID }) => {
   const classes = useStyles();
-  const dispatch = useDispatch();
+
   const [postData, setPostData] = useState({
     creator: "",
     title: "",
@@ -15,28 +17,51 @@ const Form = () => {
     tags: "",
     selectedFile: "",
   });
+  const post = useSelector((state) =>
+    currentID ? state.postsReducer.find((message) => message._id === currentID) : null
+  );
+
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (post) {
+      setPostData(post);
+    }
+  }, [post]);
 
   const clearForm = () => {
-    
-  }
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-
-    dispatch(createPost(postData));
+    setCurrentID(null);
+    setPostData({
+      creator: "",
+      title: "",
+      message: "",
+      tags: "",
+      selectedFile: "",
+    });
   };
+  
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    
+    if (currentID) {
+      dispatch(updatePost(currentID, postData));
+    } else {
+      dispatch(createPost(postData));
+    }
+    clearForm();
+  };
+  
+  
 
   return (
     <Paper className={classes.paper}>
-      
       <form
         autoComplete="off"
         noValidate
         className={`${classes.root} ${classes.form}`}
         onSubmit={handleSubmit}
-        
       >
-        <Typography varient="h6">Creating a Memory</Typography>
+        <Typography varient="h6">{currentID ? `Editing "${post.title}"` : "Posting Art"}</Typography>
         <TextField
           name="creator"
           varient="outlined"
@@ -84,7 +109,7 @@ const Form = () => {
           onChange={(event) =>
             setPostData({
               ...postData,
-              tags: event.target.value,
+              tags: event.target.value.split(',')
             })
           }
           fullWidth
@@ -109,10 +134,9 @@ const Form = () => {
           type="submit"
           fullWidth
         >
-          
-          Submit Memory
+          {currentID ? "Update Memory" : "Submit Memory"}
         </Button>
-        
+
         <Button
           variant="contained"
           color="secondary"

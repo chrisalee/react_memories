@@ -1,4 +1,4 @@
-import { FETCH_ALL_POSTS, CREATE_POST } from '../constants/postConstants';
+import { FETCH_ALL_POSTS, CREATE_POST, UPDATE_POST, LIKE_POST, DELETE_POST } from '../constants/postConstants';
 
 const postsReducer = (posts = [], action) => {
     switch (action.type) {
@@ -6,7 +6,16 @@ const postsReducer = (posts = [], action) => {
             return action.payload;
 
         case CREATE_POST:
-            return [...posts, action.payload]
+            return [...posts, action.payload];
+
+        case UPDATE_POST:
+            return posts.map((post) => post._id === action.payload._id ? action.payload : post);
+
+        case LIKE_POST:
+            return posts.map((post) => (post._id === action.payload._id ? action.payload : post));
+
+        case DELETE_POST:
+            return posts.filter((post) => post._id !== action.payload);
             
         default:
             return posts;
